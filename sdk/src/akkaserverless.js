@@ -235,17 +235,27 @@ class AkkaServerless {
       this.proxyHasTerminated = false
       debug("Discover call with info %o, sending %s components", proxyInfo, this.components.length);
       const components = this.components.map(component => {
-        const passivationTimeout = component.options.entityPassivationStrategy ? component.options.entityPassivationStrategy.timeout : null;
-        const passivationStrategy = passivationTimeout ? { timeout: { timeout: passivationTimeout } } : {};
-        return {
+        let discoveryComp = {
           componentType: component.componentType(),
-          serviceName: component.serviceName,
-          entity: {
+          serviceName: component.serviceName
+        }
+        // component_settings, either entity or "other" components
+        if (component.options.entityType) {
+          const passivationTimeout = component.options.entityPassivationStrategy ? component.options.entityPassivationStrategy.timeout : null;
+          const passivationStrategy = passivationTimeout ? { timeout: { timeout: passivationTimeout } } : {};
+          discoveryComp.entity = {
             entityType: component.options.entityType,
-            passivationStrategy: passivationStrategy
+            passivationStrategy: passivationStrategy,
+            forwardHeaders: component.options.forwardHeaders
           }
-        };
+        } else {
+          discoveryComp.component = {
+            forwardHeaders: component.options.forwardHeaders
+          }
+        }
+        return discoveryComp
       });
+      console.info("components: " + JSON.stringify(components))
       callback(null, {
         proto: this.proto,
         components: components,
