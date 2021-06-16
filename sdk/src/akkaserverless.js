@@ -255,7 +255,6 @@ class AkkaServerless {
         }
         return discoveryComp
       });
-      console.info("components: " + JSON.stringify(components))
       callback(null, {
         proto: this.proto,
         components: components,
